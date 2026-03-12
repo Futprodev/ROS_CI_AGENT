@@ -1,0 +1,6 @@
+max_collisions: 0
+min_control_frequency_hz: 50
+max_cpu_percent: 80
+max_ram_mb: 2048
+transform_tree_stable: true
+borderline_threshold_percent: 10
