@@ -176,15 +176,6 @@ Edit `config/constraints.yaml` to tune thresholds for your robot:
 
 ---
 
-## Next Steps
-
-- [ ] Push both repos to GitHub
-- [ ] Add `GEMINI_API_KEY` secret to GitHub repo
-- [ ] Open a test PR and verify the full pipeline runs
-- [ ] Confirm AI report posts as PR comment
-
----
-
 ## Troubleshooting
 
 **`config/constraints.yaml` not found**
