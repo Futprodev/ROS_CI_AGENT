@@ -8,23 +8,57 @@ jobs:
   validate:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout ci-agent
+        uses: actions/checkout@v4
+
+      - name: Checkout robot repo
+        uses: actions/checkout@v4
+        with:
+          repository: Futprodev/ROS_CI_ROBOT
+          path: ros_ws
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: pip install anthropic requests pyyaml
+      - name: Install ROS 2 Jazzy
+        run: |
+          sudo apt update
+          sudo apt install -y software-properties-common
+          sudo add-apt-repository universe
+          sudo apt update && sudo apt install -y curl
+          sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+            -o /usr/share/keyrings/ros-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+            http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
+            | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+          sudo apt update
+          sudo apt install -y ros-jazzy-desktop ros-jazzy-ros-gz python3-colcon-common-extensions
+
+      - name: Install Python dependencies
+        run: pip install google-genai pyyaml requests
+
+      - name: Build robot package
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          cd ros_ws
+          rosdep install --from-paths src --ignore-src -r -y
+          colcon build --packages-select ci_agent_robot
+        shell: bash
 
       - name: Run simulation
-        run: bash sim/run_headless_sim.sh
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source ros_ws/install/setup.bash
+          bash sim/run_headless_sim.sh
+        shell: bash
 
       - name: Run CI Agent
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          python agent/main.py /tmp/telemetry.json ${{ github.event.pull_request.number }}
+          cd agent
+          python3 main.py /tmp/telemetry.json ${{ github.event.pull_request.number }}
