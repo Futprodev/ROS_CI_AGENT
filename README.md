@@ -207,7 +207,7 @@ colcon build --packages-select ci_agent_robot
 
 ## Author
 
-Maulana Mu'ammar — Robotics Engineer (Software + Hardware)
+Maulana Mu'ammar 
 
 ## License
 
