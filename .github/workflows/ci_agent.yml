@@ -34,7 +34,9 @@ jobs:
             http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
             | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
           sudo apt update
-          sudo apt install -y ros-jazzy-desktop ros-jazzy-ros-gz python3-colcon-common-extensions
+          sudo apt install -y ros-jazzy-desktop ros-jazzy-ros-gz python3-colcon-common-extensions python3-rosdep
+          sudo rosdep init
+          rosdep update
 
       - name: Install Python dependencies
         run: pip install google-genai pyyaml requests
