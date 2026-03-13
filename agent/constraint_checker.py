@@ -1,6 +1,8 @@
-import yaml, json
+import yaml, json, os
 
-def load_constraints(path="config/constraints.yaml"):
+def load_constraints(path=None):
+    if path is None:
+        path = os.path.join(os.path.dirname(__file__), '..', 'config', 'constraints.yaml')
     with open(path) as f:
         return yaml.safe_load(f)
 

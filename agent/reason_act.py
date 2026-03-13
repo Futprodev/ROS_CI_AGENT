@@ -1,40 +1,58 @@
-import anthropic, json, os
+from google import genai
+import json, os
 
 def analyse_with_claude(telemetry: dict, check_results: dict) -> str:
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-    prompt = f"""You are a robotics CI validation agent.
+    prompt = f"""You are a robotics CI validation agent reviewing a simulation test run.
 
-Simulation telemetry:
+## Simulation Telemetry
 {json.dumps(telemetry, indent=2)}
 
-Constraint check results:
+## Constraint Check Results
 {json.dumps(check_results, indent=2)}
 
-Rules:
-- NEVER approve if collisions > 0
-- Flag borderline cases for human review
-- Be concise and technical — your audience is robotics engineers
+## Constraints Reference
+- max_collisions: 0 (any collision = unsafe)
+- min_control_frequency_hz: 50 (below this = unstable control loop)
+- max_cpu_percent: 80 (above this = system overload risk)
+- max_ram_mb: 2048 (above this = memory issue)
+- transform_tree_stable: true (false = TF not publishing, navigation broken)
 
-Respond with:
-1. APPROVED or REJECTED
-2. A bullet-point summary of what passed/failed and why
-3. Any edge cases requiring human review
+## Your Task
+Analyse the simulation results and produce a structured report with:
+
+1. **APPROVED** or **REJECTED** verdict on the first line
+2. **Summary** — one sentence explaining the overall result
+3. **Constraint Analysis** — for each constraint:
+   - Status (PASS/FAIL)
+   - The actual value vs the limit
+   - What this means for the robot in the real world
+4. **Root Cause Analysis** — for any failures, what likely caused them
+5. **Recommendations** — specific actionable steps to fix each failure
+6. **Borderline Flags** — any values close to limits that need watching
+
+## Rules
+- NEVER approve if collisions > 0
+- NEVER approve if control_freq_hz == 0.0 (means controller not running)
+- NEVER approve if transform_tree_stable == false (means TF broken)
+- Flag anything within 10% of a limit for human review
+- Be concise and technical — your audience is robotics engineers
 """
 
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1000,
-        messages=[{"role": "user", "content": prompt}]
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
     )
-    return response.content[0].text
+    return response.text
 
 if __name__ == "__main__":
-    telemetry = {
-        "collisions": 0, "avg_cpu": 55.0,
-        "avg_ram_mb": 1800, "control_freq_hz": 60,
-        "transform_tree_stable": True
-    }
+    import sys
+    telemetry_path = sys.argv[1] if len(sys.argv) > 1 else "/tmp/telemetry.json"
+
+    with open(telemetry_path) as f:
+        telemetry = json.load(f)
+
     from constraint_checker import evaluate
     results = evaluate(telemetry)
     print(analyse_with_claude(telemetry, results))
