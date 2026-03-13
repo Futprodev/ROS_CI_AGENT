@@ -9,7 +9,7 @@ Xvfb :99 -screen 0 1024x768x24 &
 sleep 2
 
 echo "Launching headless simulation..."
-timeout 120 ros2 launch ci_agent_robot sim.launch.py \
+timeout 100 ros2 launch ci_agent_robot sim.launch.py \
   2>&1 | tee /tmp/sim_output.log || true
 
 echo "Simulation complete."

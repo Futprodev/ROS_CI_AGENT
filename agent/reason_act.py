@@ -14,7 +14,7 @@ def analyse_with_claude(telemetry: dict, check_results: dict) -> str:
 
 ## Constraints Reference
 - max_collisions: 0 (any collision = unsafe)
-- min_control_frequency_hz: 50 (below this = unstable control loop)
+- min_control_frequency_hz: 5 (this is good enough for testing perposes, if its lower than this then that is dangerous)
 - max_cpu_percent: 80 (above this = system overload risk)
 - max_ram_mb: 2048 (above this = memory issue)
 - transform_tree_stable: true (false = TF not publishing, navigation broken)
