@@ -14,7 +14,7 @@ timeout 120 ros2 launch ci_agent_robot sim.launch.py \
 
 echo "Simulation complete."
 
-# Verify telemetry was written
+# Verify telemetry
 if [ ! -f /tmp/telemetry.json ]; then
   echo "ERROR: telemetry.json was not written"
   cat /tmp/sim_output.log
